@@ -20,6 +20,9 @@ struct ContentView: View {
     @State private var scanId = UUID().uuidString
     @StateObject private var uploadManager = RoomUploadManager()
 
+    @State private var isLoading = false
+    @State private var uploadResult: UploadResponse?
+
     private let isoFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -56,6 +59,34 @@ struct ContentView: View {
             }
             .buttonStyle(.bordered)
             #endif
+
+            Button {
+                Task { await uploadDummyScan() }
+            } label: {
+                Text(isLoading ? "Uploading…" : "Upload Scan")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(isLoading)
+
+            if let uploadResult {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Upload OK")
+                        .font(.headline)
+                    Text("id: \(uploadResult.id)")
+                    Text("scan_id: \(uploadResult.scan_id)")
+                    if let modelURL = uploadResult.model_url {
+                        Text("model_url: \(modelURL)")
+                    }
+                    if let floorplanURL = uploadResult.scan.floorplan_url {
+                        Text("floorplan_url: \(floorplanURL)")
+                    }
+                    if let jsonURL = uploadResult.scan.json_url {
+                        Text("json_url: \(jsonURL)")
+                    }
+                }
+                .textSelection(.enabled)
+            }
 
             if let jsonExportURL, let usdzExportURL, let svgExportURL {
                 VStack(spacing: 12) {
@@ -193,6 +224,31 @@ struct ContentView: View {
         try usdzData.write(to: usdzURL, options: [.atomic])
 
         return (json: jsonURL, usdz: usdzURL, svg: svgURL)
+    }
+
+    private func uploadDummyScan() async {
+        isLoading = true
+        errorMessage = nil
+        uploadResult = nil
+
+        // Dummy data for testing networking + backend integration.
+        // Backend only checks extension and non-empty content.
+        let dummyUSDZ = Data([0x55, 0x53, 0x44, 0x5A]) // "USDZ" bytes (not a real USDZ)
+        let dummySVG = Data("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"></svg>".utf8)
+        let metadataJSON = "{}"
+
+        do {
+            let response = try await APIClient.shared.uploadScan(
+                modelFile: dummyUSDZ,
+                floorplanFile: dummySVG,
+                metadataJSON: metadataJSON
+            )
+            uploadResult = response
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isLoading = false
     }
 }
 
