@@ -31,18 +31,18 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("RoomPlan Scanner")
+            Text("Skener místností")
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Button("Start Room Scan") {
+            Button("Začít skenování") {
                 errorMessage = nil
                 isPresentingScanner = true
             }
             .buttonStyle(.borderedProminent)
 
             #if targetEnvironment(simulator)
-            Button("Mock Scan (Simulator)") {
+            Button("Testovací sken (Simulátor)") {
                 errorMessage = nil
                 do {
                     let mockURLs = try createMockScanFiles()
@@ -90,26 +90,26 @@ struct ContentView: View {
 
             if let jsonExportURL, let usdzExportURL, let svgExportURL {
                 VStack(spacing: 12) {
-                    Text("Export Options")
+                    Text("Možnosti exportu")
                         .font(.headline)
 
-                    TextField("Room name", text: $roomName)
+                    TextField("Název místnosti", text: $roomName)
                         .textFieldStyle(.roundedBorder)
-                    TextField("Room type", text: $roomType)
+                    TextField("Typ místnosti", text: $roomType)
                         .textFieldStyle(.roundedBorder)
-                    TextField("User ID", text: $userId)
+                    TextField("ID uživatele", text: $userId)
                         .textFieldStyle(.roundedBorder)
 
-                    ShareLink("Share JSON", item: jsonExportURL)
-                    ShareLink("Share USDZ", item: usdzExportURL)
-                    ShareLink("Share SVG", item: svgExportURL)
+                    ShareLink("Sdílet JSON", item: jsonExportURL)
+                    ShareLink("Sdílet USDZ", item: usdzExportURL)
+                    ShareLink("Sdílet SVG", item: svgExportURL)
 
-                    Button("Preview USDZ") {
+                    Button("Náhled USDZ") {
                         isPresentingPreview = true
                     }
                     .buttonStyle(.bordered)
 
-                    Button("Upload to Server") {
+                    Button("Nahrát na server") {
                         let metadata = RoomUploadMetadata(
                             scanId: scanId,
                             roomName: roomName.isEmpty ? "Untitled" : roomName,
@@ -168,14 +168,14 @@ struct ContentView: View {
                     }
                 )
             } else {
-                Text("RoomPlan requires iOS 16 or later.")
+                Text("RoomPlan vyžaduje iOS 16 nebo novější.")
             }
         }
         .sheet(isPresented: $isPresentingPreview) {
             if let usdzExportURL {
                 USDZPreviewView(fileURL: usdzExportURL)
             } else {
-                Text("No USDZ available.")
+                Text("USDZ není k dispozici.")
             }
         }
     }
